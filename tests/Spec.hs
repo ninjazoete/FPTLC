@@ -66,7 +66,7 @@ testFunctionReduction = hspec $ do
 
 testApplicationReduction :: IO ()
 testApplicationReduction = hspec $ do
-  describe "Reducing a function" $ do
+  describe "Reducing a application" $ do
     it "returns Name x after reduction of (\\y.y x)" $
       (reduce <$> regularParse application "(\\y.y x)") `shouldBe` Right (Name "x")
     it "returns Func x Name x after reduction of (\\y.y \\x.x)" $
@@ -75,11 +75,15 @@ testApplicationReduction = hspec $ do
 testNameReduction :: IO ()
 testNameReduction = hspec $ do
   describe "Reducing a name" $ do
-    it "returns Name x" $
+    it "returns Name x after reduction of x" $
       (reduce <$> regularParse name "x") `shouldBe` Right (Name "x")
       
 
 testExpressionReduction :: IO ()
 testExpressionReduction = hspec $ do
   describe "Reducing an expression" $ do
+    it "returns Func x Name x after reduction of (\\f.((f \\x.x) \\h.\\a.(h a)) \\b.\\c.b)" $ do
+      (reduce <$> regularParse expression "(\\f.((f \\x.x) \\h.\\a.(h a)) \\b.\\c.b)") `shouldBe` Right (Func "x" (Name "x"))
+    it "returns Func c Func x Name x after reduction of (\\b.\\c.b \\x.x)" $ do
+      (reduce <$> regularParse expression "(\\b.\\c.b \\x.x)") `shouldBe` Right (Func "c" (Func "x" (Name "x")))
     

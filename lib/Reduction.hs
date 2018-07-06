@@ -3,9 +3,20 @@ module Reduction (reduce) where
 import Expression
 
 reduce :: Expr -> Expr
-reduce (FuncApp (Func n e) e1) = reduce $ findAndSubstitue n e e1
-reduce (Func n e) = reduce e
-reduce x = x
+reduce e = if needsApply e
+              then reduce $ reduceSinglePass e 
+              else e
+
+needsApply :: Expr -> Bool
+needsApply (FuncApp e e1) = True
+needsApply (Name n) = False
+needsApply (Func n e) = needsApply e
+  
+reduceSinglePass :: Expr -> Expr
+reduceSinglePass (FuncApp (Func n e) e1) = reduceSinglePass $ findAndSubstitue n e e1
+reduceSinglePass (FuncApp e e1) = FuncApp (reduceSinglePass e) (reduceSinglePass e1)
+reduceSinglePass (Func n e) = Func n $ reduceSinglePass e
+reduceSinglePass (Name n) = Name n
 
 findAndSubstitue :: String -> Expr -> Expr -> Expr
 findAndSubstitue s v@(Name n) e
